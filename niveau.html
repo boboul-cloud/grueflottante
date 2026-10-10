@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Un niveau pour Grue Flottante</title>
+<meta name="description" content="Une mission composée dans Grue Flottante, partagée par un joueur : ouvrez-la dans le jeu pour l'ajouter à « Mes niveaux ».">
+<link rel="icon" href="images/icone.png">
+<link rel="apple-touch-icon" href="images/icone.png">
+<link rel="stylesheet" href="style.css">
+<style>
+  .niveau { margin-top: 6px; }
+  .niveau h2 { margin: 0 0 4px; }
+  .niveau .resume { color: var(--doux); margin: 0 0 18px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0 4px; }
+  .bouton { display: inline-block; padding: 12px 22px; border-radius: 999px; font-weight: 700; text-decoration: none;
+            border: 2px solid var(--ambre); background: var(--ambre); color: #10162a; font-size: 17px; cursor: pointer;
+            font-family: inherit; }
+  .bouton.second { background: transparent; color: var(--encre); }
+  .copie { color: var(--doux); font-size: 14px; min-height: 1.4em; margin: 6px 0 0; }
+</style>
+</head>
+<body>
+<header class="bandeau">
+  <div class="dedans">
+    <h1><img class="icone" src="images/icone.png" alt="" width="56" height="56">UN NIVEAU PARTAGÉ</h1>
+    <p class="accroche">Grue Flottante</p>
+    <nav>
+      <a href="index.html">Le jeu</a>
+      <a href="assistance.html">Assistance</a>
+      <a href="confidentialite.html">Confidentialité</a>
+      <a href="conditions.html">Conditions</a>
+    </nav>
+  </div>
+</header>
+<main class="dedans">
+  <!-- Le niveau suit le « # » de l'adresse : il ne quitte pas le navigateur. -->
+  <div class="encadre niveau" id="niveau" hidden>
+    <h2 id="titre"></h2>
+    <p class="resume" id="resume"></p>
+    <div class="actions">
+      <a class="bouton" id="ouvrir" href="#">Ouvrir dans Grue Flottante</a>
+      <button class="bouton second" id="copier" type="button">Copier le lien</button>
+    </div>
+    <p class="copie" id="copie" aria-live="polite"></p>
+  </div>
+
+  <div class="encadre" id="rien" hidden>
+    <h3>Ce lien ne contient pas de niveau lisible</h3>
+    <p>Il a peut-être été coupé en route, dans un message trop étroit. Demandez à qui vous l'a envoyé de
+    le partager à nouveau, depuis « Mes niveaux » : menu « … » de la carte, <strong>Partager</strong>.</p>
+  </div>
+
+  <noscript><div class="encadre"><p>Activez JavaScript pour voir ce niveau, ou copiez l'adresse de cette
+  page et collez-la dans le jeu : Jouer › Mes niveaux › <strong>Coller</strong>.</p></div></noscript>
+
+  <h2>Comment ça marche</h2>
+  <p>Ce lien porte une mission composée dans le créateur de niveaux de Grue Flottante : le port, la
+  cargaison, l'engin, d'où l'on part et où l'on livre, le temps qu'il fait. <strong>Ouvrir dans Grue
+  Flottante</strong> la propose au jeu, qui demande s'il faut l'ajouter à « Mes niveaux ».</p>
+  <p>Le bouton ne répond pas ? Copiez le lien, ouvrez Grue Flottante, touchez <strong>Jouer</strong>
+  puis, en face de « Mes niveaux », <strong>Coller</strong>.</p>
+  <p>Pour partager vos propres niveaux : dans « Mes niveaux », menu « … » de la carte,
+  <strong>Partager</strong>. Grue Flottante est un jeu pour iPhone et iPad.</p>
+</main>
+<footer class="dedans">Grue Flottante — Robert Oulhen, éditeur individuel · <a href="mailto:bob.oulhen@gmail.com">bob.oulhen@gmail.com</a></footer>
+<script>
+// Le code : JSON compressé (deflate brut) puis base64 « URL », comme le fait le jeu.
+async function lire(code) {
+  const b64 = code.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((code.length + 3) % 4);
+  const octets = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  const flux = new Blob([octets]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+  return JSON.parse(await new Response(flux).text());
+}
+
+(async () => {
+  const code = (location.hash.slice(1).match(/^[A-Za-z0-9_-]+/) || [""])[0];
+  try {
+    if (code.length < 16) throw new Error("vide");
+    const n = await lire(code);
+    document.getElementById("titre").textContent = "« " + n.titre + " »";
+    document.getElementById("resume").textContent = n.resume;
+    document.title = n.titre + " — Grue Flottante";
+    document.getElementById("ouvrir").href = "grueflottante://niveau#" + code;
+    document.getElementById("niveau").hidden = false;
+  } catch (e) {
+    document.getElementById("rien").hidden = false;
+  }
+  document.getElementById("copier").addEventListener("click", async () => {
+    const msg = document.getElementById("copie");
+    try {
+      await navigator.clipboard.writeText(location.href);
+      msg.textContent = "Lien copié : collez-le dans le jeu (Jouer › Mes niveaux › Coller).";
+    } catch (e) {
+      msg.textContent = "Copie impossible ici : copiez l'adresse de la page.";
+    }
+  });
+})();
+</script>
+</body>
+</html>
